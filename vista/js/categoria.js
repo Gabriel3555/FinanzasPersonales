@@ -14,14 +14,6 @@
     document.title.toLowerCase().includes("categoria") ||
     document.querySelector("h1, h2, h3")?.textContent?.toLowerCase().includes("categoria")
 
-  if (!esPaginaCategorias) {
-    console.log("❌ No estamos en la página de categorías")
-    return
-  }
-
-  console.log("✅ Página de categorías detectada")
-
-  // Definir la clase Categoria primero
   class Categoria {
     constructor(data) {
       this.data = data
@@ -113,12 +105,8 @@
                   url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json",
                 },
               })
-            } else {
-              console.error("jQuery is not loaded. Please include jQuery in your project.")
             }
-          } else {
-            console.log("error")
-          }
+          } 
         })
     }
 
@@ -445,34 +433,5 @@
 
   // Exponer la clase globalmente para que otros módulos puedan usarla
   window.Categoria = Categoria
-
-  // Debug global simple
-  if (!window.FinanzasDebug) {
-    window.FinanzasDebug = {}
-  }
-
-  window.FinanzasDebug.detectarPagina = () => {
-    const info = {
-      url: window.location.href,
-      pathname: window.location.pathname,
-      title: document.title,
-      elementos: {
-        tablaCategoria: !!document.getElementById("tablaCategoria"),
-        tablaTransaccion: !!document.getElementById("tablaTransaccion"),
-        dashboard: !!document.querySelector(".dashboard, #dashboard-container"),
-      },
-      dependencias: {
-        jQuery: typeof window.jQuery !== "undefined",
-        Swal: typeof window.Swal !== "undefined",
-        DataTables: typeof window.jQuery?.fn?.DataTable !== "undefined",
-        Categoria: typeof window.Categoria !== "undefined",
-        Transaccion: typeof window.Transaccion !== "undefined",
-      },
-    }
-
-    console.log("🔍 INFORMACIÓN DEL SISTEMA:", info)
-    return info
-  }
-
-  console.log("💡 Debug disponible en: window.FinanzasDebug.detectarPagina()")
+  
 })()

@@ -1,16 +1,10 @@
 ;(() => {
-  console.log("🚀 INICIANDO MÓDULO DE TRANSACCIONES MEJORADO")
-
-  // Verificar dependencias al inicio
   const dependenciasIniciales = {
     jQuery: typeof window.jQuery !== "undefined",
     Swal: typeof window.Swal !== "undefined",
     DataTables: typeof window.jQuery?.fn?.DataTable !== "undefined",
   }
 
-  console.log("📋 Estado de dependencias iniciales:", dependenciasIniciales)
-
-  // Verificar si estamos en la página de transacciones de forma más flexible
   const esPaginaTransacciones =
     document.getElementById("tablaTransaccion") ||
     document.querySelector(".tabla-transacciones") ||
@@ -24,13 +18,6 @@
     window.location.href.includes("transaccion") ||
     document.title.toLowerCase().includes("transaccion") ||
     document.querySelector("h1, h2, h3")?.textContent?.toLowerCase().includes("transaccion")
-
-  if (!esPaginaTransacciones) {
-    console.log("❌ No estamos en la página de transacciones")
-    return
-  }
-
-  console.log("✅ Página de transacciones detectada")
 
   // Variables globales
   let $ = window.jQuery
@@ -48,24 +35,14 @@
       Categoria: typeof Categoria !== "undefined",
       DataTables: typeof $?.fn?.DataTable !== "undefined",
     }
-
-    console.log("📋 Estado de dependencias:", dependencias)
     return dependencias
   }
 
   function inicializar() {
-    console.log("🔧 Inicializando módulo de transacciones...")
-
-    // Actualizar referencias a las clases
     actualizarReferencias()
-
     mostrarTransacciones()
     configurarEventListeners()
-
-    // Intentar cargar selectores con retry
     cargarSelectoresConReintento()
-
-    console.log("✅ Módulo de transacciones inicializado")
   }
 
   function actualizarReferencias() {
@@ -77,7 +54,7 @@
   }
 
   function mostrarTransacciones() {
-    console.log("📊 Cargando transacciones...")
+
 
     actualizarReferencias()
 
@@ -85,26 +62,24 @@
       const objData = { mostrarTransaccion: "ok" }
       const objTablaTransaccion = new Transaccion(objData)
       objTablaTransaccion.mostrarTransaccion()
-    } else {
-      console.error("❌ Clase Transaccion no disponible")
-    }
+    } 
   }
 
   function configurarEventListeners() {
-    console.log("🎯 Configurando event listeners...")
+
 
     // Botón agregar transacción
     const btnAgregarTransaccion = document.getElementById("btnAgregarTransaccion")
     if (btnAgregarTransaccion) {
       btnAgregarTransaccion.addEventListener("click", mostrarFormularioNuevo)
-      console.log("✅ Event listener agregado a btnAgregarTransaccion")
+
     }
 
     // Botón regresar
     const btnRegresarTransaccion = document.getElementById("btnRegresarTransaccion")
     if (btnRegresarTransaccion) {
       btnRegresarTransaccion.addEventListener("click", regresarATabla)
-      console.log("✅ Event listener agregado a btnRegresarTransaccion")
+
     }
 
     // Formularios
@@ -114,7 +89,7 @@
     const tipoTransaccion = document.getElementById("txt_tipo_transaccion")
     if (tipoTransaccion) {
       tipoTransaccion.addEventListener("change", manejarCambioTipo)
-      console.log("✅ Event listener agregado a txt_tipo_transaccion")
+
     }
   }
 
@@ -128,14 +103,14 @@
     if (form) {
       form.reset()
       form.classList.remove("was-validated")
-      console.log("✅ Formulario limpiado")
+
     }
 
     // Establecer fecha actual
     const fechaInput = document.getElementById("txt_fecha_transaccion")
     if (fechaInput) {
       fechaInput.value = new Date().toISOString().split("T")[0]
-      console.log("✅ Fecha actual establecida:", fechaInput.value)
+
     }
 
     // Cargar selectores con reintento
@@ -151,12 +126,10 @@
   }
 
   function configurarFormularios() {
-    console.log("📋 Configurando formularios...")
 
     const formTransaccion = document.getElementById("formTransaccion")
     if (formTransaccion) {
       formTransaccion.addEventListener("submit", manejarSubmitTransaccion, false)
-      console.log("✅ Event listener agregado a formulario")
     }
   }
 
@@ -166,7 +139,7 @@
 
     const form = event.target
     if (!form.checkValidity()) {
-      console.log("❌ Formulario no válido")
+  
       event.stopPropagation()
       form.classList.add("was-validated")
       return
@@ -181,7 +154,7 @@
       fecha_transaccion: document.getElementById("txt_fecha_transaccion").value,
     }
 
-    console.log("📊 Datos del formulario:", datos)
+
 
     // Validaciones adicionales
     if (!validarDatosTransaccion(datos.idcuenta, datos.idcategoria, datos.tipo, datos.monto, datos.fecha_transaccion)) {
@@ -199,14 +172,11 @@
       console.log("📤 Enviando datos:", objData)
       const objTransaccion = new Transaccion(objData)
       objTransaccion.registrarTransaccion()
-    } else {
-      console.error("❌ Clase Transaccion no disponible para registrar")
-      mostrarError("Error: No se puede procesar la transacción en este momento")
-    }
+    } 
   }
 
   function validarDatosTransaccion(idcuenta, idcategoria, tipo, monto, fecha) {
-    console.log("✅ Validando datos de transacción...")
+
 
     if (!idcuenta) {
       mostrarError("Debe seleccionar una cuenta")
@@ -233,7 +203,7 @@
       return false
     }
 
-    console.log("✅ Validación exitosa")
+
     return true
   }
 
@@ -254,7 +224,6 @@
   }
 
   function cargarSelectoresConReintento(intento = 1, maxIntentos = 3) {
-    console.log(`🔄 Intento ${intento} de cargar selectores...`)
 
     actualizarReferencias()
 
@@ -272,27 +241,20 @@
         setTimeout(() => {
           cargarSelectoresConReintento(intento + 1, maxIntentos)
         }, 500 * intento) // Incrementar el delay con cada intento
-      } else {
-        console.error("❌ No se pudieron cargar las clases después de varios intentos")
-        cargarSelectoresAlternativo()
       }
     }
   }
 
   function cargarSelectores() {
-    console.log("📋 Cargando selectores...")
 
     // Cargar cuentas
     if (typeof Cuenta !== "undefined") {
       try {
         const objCuenta = new Cuenta({ mostrarCuenta: "ok" })
         objCuenta.cargarSelectCuentas()
-        console.log("✅ Cargando cuentas...")
       } catch (error) {
-        console.error("❌ Error al cargar cuentas:", error)
       }
     } else {
-      console.error("❌ Clase Cuenta no disponible")
       cargarCuentasAlternativo()
     }
 
@@ -301,13 +263,13 @@
       try {
         const objCategoria = new Categoria({ mostrarCategoria: "ok" })
         objCategoria.cargarSelectCategorias()
-        console.log("✅ Cargando categorías...")
+
       } catch (error) {
-        console.error("❌ Error al cargar categorías:", error)
+
         cargarCategoriasAlternativo()
       }
     } else {
-      console.error("❌ Clase Categoria no disponible")
+
       cargarCategoriasAlternativo()
     }
   }
@@ -325,7 +287,7 @@
     })
       .then((response) => response.json())
       .catch((error) => {
-        console.error("❌ Error al cargar categorías alternativo:", error)
+
       })
       .then((response) => {
         if (response && response["codigo"] == "200") {
@@ -333,8 +295,6 @@
 
           if (selectCategoria) {
             selectCategoria.innerHTML = '<option value="">Seleccione una categoría...</option>'
-
-            console.log(`✅ Cargando ${response["listaCategoria"].length} categorías (método alternativo)`)
 
             response["listaCategoria"].forEach((element) => {
               const option = document.createElement("option")
@@ -344,12 +304,8 @@
               selectCategoria.appendChild(option)
             })
 
-            console.log("✅ Categorías cargadas exitosamente con método alternativo")
-          } else {
-            console.warn("⚠️ No se encontró el elemento select de categorías")
-          }
-        } else {
-          console.error("❌ Error en la respuesta del servidor:", response)
+
+          } 
         }
       })
   }
@@ -367,7 +323,7 @@
     })
       .then((response) => response.json())
       .catch((error) => {
-        console.error("❌ Error al cargar cuentas alternativo:", error)
+
       })
       .then((response) => {
         if (response && response["codigo"] == "200") {
@@ -409,17 +365,16 @@
 
         if (tipo) {
           objCategoria.cargarSelectCategoriasPorTipo(tipo)
-          console.log("✅ Cargando categorías por tipo:", tipo)
+
         } else {
           objCategoria.cargarSelectCategorias()
-          console.log("✅ Cargando todas las categorías")
+
         }
       } catch (error) {
-        console.error("❌ Error al manejar cambio de tipo:", error)
+
         cargarCategoriasPorTipoAlternativo(tipo)
       }
     } else {
-      console.error("❌ Clase Categoria no disponible, usando método alternativo")
       cargarCategoriasPorTipoAlternativo(tipo)
     }
   }
@@ -436,7 +391,6 @@
     })
       .then((response) => response.json())
       .catch((error) => {
-        console.error("❌ Error al cargar categorías por tipo alternativo:", error)
       })
       .then((response) => {
         if (response && response["codigo"] == "200") {
@@ -468,7 +422,7 @@
               })
             }
 
-            console.log(`✅ Se cargaron ${categoriasEncontradas} categorías (método alternativo)`)
+
 
             if (categoriasEncontradas === 0 && tipo) {
               const option = document.createElement("option")
@@ -484,14 +438,14 @@
 
   // FUNCIÓN GLOBAL PARA ACTUALIZAR LA TABLA DESDE CUALQUIER LUGAR
   window.actualizarTablaTransacciones = () => {
-    console.log("🔄 Actualizando tabla desde función global...")
+
     mostrarTransacciones()
   }
 
   // Inicializar cuando el DOM esté listo
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializar)
-    console.log("⏳ Esperando DOMContentLoaded...")
+
   } else {
     // Si el DOM ya está listo, esperar un poco para que se carguen las clases
     setTimeout(inicializar, 100)
@@ -509,16 +463,11 @@
       if (typeof Transaccion !== "undefined") {
         const obj = new Transaccion({ mostrarTransaccion: "ok" })
         obj.testConexion()
-      } else {
-        console.error("❌ Clase Transaccion no disponible para test")
-      }
+      } 
     },
     verificarDependencias,
     cargarSelectores: cargarSelectoresConReintento,
     cargarCategoriasAlternativo,
     cargarCuentasAlternativo,
   }
-
-  console.log("💡 Debug disponible en: window.TransaccionDebug")
-  console.log("💡 Función global: window.actualizarTablaTransacciones()")
 })()

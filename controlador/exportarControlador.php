@@ -89,19 +89,30 @@ class ExportarControlador{
         $html = $this->generarHTMLReporte($datos);
         
         // Headers para PDF
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="reporte_finanzas_' . date('Y-m-d') . '.pdf"');
+        header('Content-Type: text/html; charset=utf-8');
+        header('Content-Disposition: inline; filename="reporte_finanzas_' . date('Y-m-d') . '.html"');
         
-        // Generar PDF usando DomPDF o similar
-        $this->generarPDFConHTML($html);
+        // Generar HTML con estilos para impresión
+        echo $html;
+        
+        // JavaScript para abrir diálogo de impresión
+        echo "
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 1000);
+            }
+        </script>";
     }
     
     private function exportarExcel($datos) {
-        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="reporte_finanzas_' . date('Y-m-d') . '.xls"');
         header('Pragma: no-cache');
         header('Expires: 0');
         
+        echo "\xEF\xBB\xBF"; // BOM para UTF-8
         echo $this->generarHTMLTabla($datos);
     }
     
@@ -120,7 +131,7 @@ class ExportarControlador{
     }
     
     private function generarHTMLReporte($datos) {
-        $usuario_nombre = $_SESSION['usuario_nombre'];
+        $usuario_nombre = $_SESSION['usuario_nombre'] ?? 'Usuario';
         $fecha_reporte = date('d/m/Y H:i:s');
         
         $html = "
@@ -141,6 +152,10 @@ class ExportarControlador{
                 .text-danger { color: #dc3545; }
                 .metric-card { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; text-align: center; }
                 .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6c757d; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
             </style>
         </head>
         <body>
@@ -237,46 +252,6 @@ class ExportarControlador{
             </div>";
         }
         
-        // Transacciones detalladas
-        if (isset($datos['transacciones']) && $datos['transacciones']['codigo'] == '200' && !empty($datos['transacciones']['transacciones'])) {
-            $html .= "
-            <div class='section'>
-                <h3>Transacciones Detalladas</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Descripción</th>
-                            <th>Categoría</th>
-                            <th>Cuenta</th>
-                            <th>Tipo</th>
-                            <th>Monto</th>
-                        </tr>
-                    </thead>
-                    <tbody>";
-            
-            foreach($datos['transacciones']['transacciones'] as $transaccion) {
-                $fecha = date('d/m/Y', strtotime($transaccion['fecha_transaccion']));
-                $tipo_class = $transaccion['tipo'] == 'ingreso' ? 'text-success' : 'text-danger';
-                $monto_signo = $transaccion['tipo'] == 'ingreso' ? '+' : '-';
-                
-                $html .= "
-                        <tr>
-                            <td>{$fecha}</td>
-                            <td>" . ($transaccion['descripcion'] ?: 'Sin descripción') . "</td>
-                            <td>{$transaccion['categoria_nombre']}</td>
-                            <td>{$transaccion['cuenta_nombre']}</td>
-                            <td>" . ucfirst($transaccion['tipo']) . "</td>
-                            <td class='{$tipo_class}'>{$monto_signo}$" . number_format($transaccion['monto'], 2) . "</td>
-                        </tr>";
-            }
-            
-            $html .= "
-                    </tbody>
-                </table>
-            </div>";
-        }
-        
         $html .= "
             <div class='footer'>
                 <p>Reporte generado por Sistema de Finanzas Personales</p>
@@ -296,7 +271,7 @@ class ExportarControlador{
     private function generarCSV($datos, $output) {
         // Encabezado del reporte
         fputcsv($output, array('REPORTE FINANCIERO'));
-        fputcsv($output, array('Usuario: ' . $_SESSION['usuario_nombre']));
+        fputcsv($output, array('Usuario: ' . ($_SESSION['usuario_nombre'] ?? 'Usuario')));
         fputcsv($output, array('Fecha: ' . date('d/m/Y H:i:s')));
         fputcsv($output, array('Período: ' . ucfirst($this->periodo)));
         fputcsv($output, array(''));
@@ -343,42 +318,6 @@ class ExportarControlador{
             }
             fputcsv($output, array(''));
         }
-        
-        // Transacciones detalladas
-        if (isset($datos['transacciones']) && $datos['transacciones']['codigo'] == '200' && !empty($datos['transacciones']['transacciones'])) {
-            fputcsv($output, array('TRANSACCIONES DETALLADAS'));
-            fputcsv($output, array('Fecha', 'Descripción', 'Categoría', 'Cuenta', 'Tipo', 'Monto'));
-            
-            foreach($datos['transacciones']['transacciones'] as $transaccion) {
-                $fecha = date('d/m/Y', strtotime($transaccion['fecha_transaccion']));
-                $monto_signo = $transaccion['tipo'] == 'ingreso' ? '+' : '-';
-                
-                fputcsv($output, array(
-                    $fecha,
-                    $transaccion['descripcion'] ?: 'Sin descripción',
-                    $transaccion['categoria_nombre'],
-                    $transaccion['cuenta_nombre'],
-                    ucfirst($transaccion['tipo']),
-                    $monto_signo . '$' . number_format($transaccion['monto'], 2)
-                ));
-            }
-        }
-    }
-    
-    private function generarPDFConHTML($html) {
-        // Implementación básica sin librerías externas
-        // Para una implementación completa, usar DomPDF o similar
-        
-        // Por ahora, convertir a HTML y dejar que el navegador maneje la conversión
-        echo $html;
-        
-        // Agregar JavaScript para imprimir automáticamente
-        echo "
-        <script>
-            window.onload = function() {
-                window.print();
-            }
-        </script>";
     }
 }
 
@@ -403,3 +342,4 @@ try {
     echo json_encode(array("codigo" => "500", "mensaje" => "Error interno del servidor: " . $e->getMessage()));
 }
 ?>
+    

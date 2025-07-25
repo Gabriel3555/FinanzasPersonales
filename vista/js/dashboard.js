@@ -1,7 +1,4 @@
-;(() => {
-  console.log("🚀 INICIANDO DASHBOARD MEJORADO")
-
-  // Verificar si estamos en la página del dashboard
+(() => {
   const esPaginaDashboard =
     document.querySelector(".dashboard") ||
     document.querySelector("[data-page='dashboard']") ||
@@ -9,250 +6,206 @@
     window.location.pathname.includes("dashboard") ||
     window.location.href.includes("dashboard") ||
     document.title.toLowerCase().includes("dashboard") ||
-    true // Cargar siempre como fallback
+    true;
 
   if (!esPaginaDashboard) {
-    console.log("❌ No estamos en la página del dashboard")
-    return
+    return;
   }
-
-  console.log("✅ Página del dashboard detectada")
 
   class DashboardMejorado {
     constructor() {
-      this.debug = true
+      this.periodoActual = "todo";
       this.datosCompletos = {
         transacciones: [],
         cuentas: [],
         categorias: [],
         estadisticas: {},
-      }
-      this.elementosEncontrados = {}
-      this.graficas = {}
+      };
+      this.elementosEncontrados = {};
+      this.graficas = {};
     }
 
     async inicializar() {
-      console.log("🔧 Inicializando dashboard mejorado...")
-
       try {
-        // Detectar elementos disponibles
-        this.detectarElementos()
+        this.detectarElementos();
+        this.configurarFiltros();
+        await this.cargarDatosCompletos();
+        this.calcularEstadisticas();
+        this.actualizarInterfaz();
+        this.inicializarGraficas();
+        this.cargarUltimasTransacciones();
+      } catch (error) {}
+    }
 
-        // Configurar event listeners básicos (sin filtros)
-        // this.configurarEventListeners()
-
-        // Cargar datos
-        await this.cargarDatosCompletos()
-
-        // Calcular estadísticas
-        this.calcularEstadisticas()
-
-        // Actualizar interfaz
-        this.actualizarInterfaz()
-
-        // Inicializar gráficas
-        this.inicializarGraficas()
-
-        // Cargar últimas transacciones
-        this.cargarUltimasTransacciones()
-
-        console.log("✅ Dashboard mejorado inicializado correctamente")
-      } catch (error) {
-        console.error("❌ Error inicializando dashboard:", error)
+    configurarFiltros() {
+      const filtroPeriodo = document.getElementById("filtroPeriodoDashboard");
+      if (filtroPeriodo) {
+        filtroPeriodo.addEventListener("change", (e) => {
+          this.periodoActual = e.target.value;
+          this.actualizarDashboard();
+        });
       }
     }
 
     detectarElementos() {
-      console.log("🔍 Detectando elementos disponibles...")
-
-      // Elementos de métricas
       const selectoresEstadisticas = [
         { key: "ingresos", selectors: ["#totalIngresos"] },
         { key: "gastos", selectors: ["#totalGastos"] },
         { key: "balance", selectors: ["#balance"] },
         { key: "transacciones", selectors: ["#totalTransacciones"] },
-      ]
+      ];
 
       selectoresEstadisticas.forEach(({ key, selectors }) => {
         for (const selector of selectors) {
-          const elemento = document.querySelector(selector)
+          const elemento = document.querySelector(selector);
           if (elemento) {
-            this.elementosEncontrados[key] = elemento
-            console.log(`✅ Encontrado elemento ${key}:`, selector)
-            break
+            this.elementosEncontrados[key] = elemento;
+            break;
           }
         }
-      })
+      });
 
-      // Canvas para gráficas
       const canvasSelectors = [
         { key: "graficoIngresos", selector: "#graficoIngresos" },
         { key: "graficoGastos", selector: "#graficoGastos" },
         { key: "graficoEvolucion", selector: "#graficoEvolucion" },
-      ]
+      ];
 
       canvasSelectors.forEach(({ key, selector }) => {
-        const elemento = document.querySelector(selector)
+        const elemento = document.querySelector(selector);
         if (elemento) {
-          this.elementosEncontrados[key] = elemento
-          console.log(`✅ Encontrado canvas ${key}:`, selector)
+          this.elementosEncontrados[key] = elemento;
         }
-      })
-
-      console.log("📋 Elementos detectados:", Object.keys(this.elementosEncontrados))
+      });
     }
 
     async cargarDatosCompletos() {
-      console.log("📊 Cargando datos...")
-
       try {
-        // Cargar transacciones
-        const transacciones = await this.obtenerTransacciones()
-        this.datosCompletos.transacciones = transacciones
+        const transacciones = await this.obtenerTransacciones();
+        this.datosCompletos.transacciones = transacciones;
 
-        // Cargar cuentas
-        const cuentas = await this.obtenerCuentas()
-        this.datosCompletos.cuentas = cuentas
+        const cuentas = await this.obtenerCuentas();
+        this.datosCompletos.cuentas = cuentas;
 
-        // Cargar categorías
-        const categorias = await this.obtenerCategorias()
-        this.datosCompletos.categorias = categorias
-
-        console.log("✅ Datos cargados:", {
-          transacciones: this.datosCompletos.transacciones.length,
-          cuentas: this.datosCompletos.cuentas.length,
-          categorias: this.datosCompletos.categorias.length,
-        })
-      } catch (error) {
-        console.error("❌ Error cargando datos:", error)
-      }
+        const categorias = await this.obtenerCategorias();
+        this.datosCompletos.categorias = categorias;
+      } catch (error) {}
     }
 
     async obtenerTransacciones() {
-      const objData = new FormData()
-      objData.append("mostrarTransaccion", "ok")
+      const objData = new FormData();
+      objData.append("mostrarTransaccion", "ok");
 
       try {
         const response = await fetch("controlador/transaccionControlador.php", {
           method: "POST",
           body: objData,
-        })
+        });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const text = await response.text()
+        const text = await response.text();
 
         if (text.trim().startsWith("<") || text.includes("Fatal error")) {
-          console.warn("⚠️ Error del servidor en transacciones")
-          return []
+          return [];
         }
 
-        const data = JSON.parse(text)
+        const data = JSON.parse(text);
 
         if (data.codigo === "200" && data.listaTransaccion) {
-          console.log(`✅ ${data.listaTransaccion.length} transacciones obtenidas`)
-          return data.listaTransaccion
+          return data.listaTransaccion;
         } else {
-          console.log("ℹ️ No se encontraron transacciones")
-          return []
+          return [];
         }
       } catch (error) {
-        console.log("ℹ️ No se pudieron cargar transacciones:", error.message)
-        return []
+        return [];
       }
     }
 
     async obtenerCuentas() {
-      const objData = new FormData()
-      objData.append("mostrarCuenta", "ok")
+      const objData = new FormData();
+      objData.append("mostrarCuenta", "ok");
 
       try {
         const response = await fetch("controlador/cuentaControlador.php", {
           method: "POST",
           body: objData,
-        })
+        });
 
-        const text = await response.text()
-        const data = JSON.parse(text)
+        const text = await response.text();
+        const data = JSON.parse(text);
 
         if (data.codigo === "200" && data.listaCuenta) {
-          console.log(`✅ ${data.listaCuenta.length} cuentas obtenidas`)
-          return data.listaCuenta
+          return data.listaCuenta;
         } else {
-          return []
+          return [];
         }
       } catch (error) {
-        console.log("ℹ️ No se pudieron cargar cuentas:", error.message)
-        return []
+        return [];
       }
     }
 
     async obtenerCategorias() {
-      const objData = new FormData()
-      objData.append("mostrarCategoria", "ok")
+      const objData = new FormData();
+      objData.append("mostrarCategoria", "ok");
 
       try {
         const response = await fetch("controlador/categoriaControlador.php", {
           method: "POST",
           body: objData,
-        })
+        });
 
-        const text = await response.text()
-        const data = JSON.parse(text)
+        const text = await response.text();
+        const data = JSON.parse(text);
 
         if (data.codigo === "200" && data.listaCategoria) {
-          console.log(`✅ ${data.listaCategoria.length} categorías obtenidas`)
-          return data.listaCategoria
+          return data.listaCategoria;
         } else {
-          return []
+          return [];
         }
       } catch (error) {
-        console.log("ℹ️ No se pudieron cargar categorías:", error.message)
-        return []
+        return [];
       }
     }
 
     calcularEstadisticas() {
-      console.log("📊 Calculando estadísticas...")
+      const todasTransacciones = this.datosCompletos.transacciones;
+      const transacciones = this.filtrarTransaccionesPorPeriodo(todasTransacciones, this.periodoActual);
 
-      const transacciones = this.datosCompletos.transacciones
-
-      let totalIngresos = 0
-      let totalGastos = 0
-      const ingresosPorCategoria = {}
-      const gastosPorCategoria = {}
-      const transaccionesPorMes = {}
+      let totalIngresos = 0;
+      let totalGastos = 0;
+      const ingresosPorCategoria = {};
+      const gastosPorCategoria = {};
+      const transaccionesPorMes = {};
 
       if (transacciones && transacciones.length > 0) {
         transacciones.forEach((transaccion) => {
-          const monto = Number.parseFloat(transaccion.monto) || 0
-          const tipo = transaccion.tipo
-          const categoria = transaccion.categoria_nombre || "Sin categoría"
-          const fecha = new Date(transaccion.fecha_transaccion)
-          const mesAno = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`
+          const monto = Number.parseFloat(transaccion.monto) || 0;
+          const tipo = transaccion.tipo;
+          const categoria = transaccion.categoria_nombre || "Sin categoría";
+          const fecha = new Date(transaccion.fecha_transaccion);
+          const mesAno = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
 
-          // Totales por tipo
           if (tipo === "ingreso") {
-            totalIngresos += monto
-            ingresosPorCategoria[categoria] = (ingresosPorCategoria[categoria] || 0) + monto
+            totalIngresos += monto;
+            ingresosPorCategoria[categoria] = (ingresosPorCategoria[categoria] || 0) + monto;
           } else if (tipo === "gasto") {
-            totalGastos += monto
-            gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + monto
+            totalGastos += monto;
+            gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + monto;
           }
 
-          // Transacciones por mes
           if (!transaccionesPorMes[mesAno]) {
-            transaccionesPorMes[mesAno] = { ingresos: 0, gastos: 0 }
+            transaccionesPorMes[mesAno] = { ingresos: 0, gastos: 0 };
           }
 
           if (tipo === "ingreso") {
-            transaccionesPorMes[mesAno].ingresos += monto
+            transaccionesPorMes[mesAno].ingresos += monto;
           } else if (tipo === "gasto") {
-            transaccionesPorMes[mesAno].gastos += monto
+            transaccionesPorMes[mesAno].gastos += monto;
           }
-        })
+        });
       }
 
       this.datosCompletos.estadisticas = {
@@ -263,100 +216,131 @@
         ingresosPorCategoria,
         gastosPorCategoria,
         transaccionesPorMes,
+        periodo: this.periodoActual,
+      };
+    }
+
+    filtrarTransaccionesPorPeriodo(transacciones, periodo) {
+      if (!transacciones || transacciones.length === 0) return [];
+
+      if (periodo === "todo") {
+        return transacciones;
       }
 
-      console.log("✅ Estadísticas calculadas:", this.datosCompletos.estadisticas)
+      const hoy = new Date();
+      let fechaInicio;
+
+      switch (periodo) {
+        case "semana":
+          fechaInicio = new Date(hoy);
+          fechaInicio.setDate(hoy.getDate() - 7);
+          break;
+        case "mes":
+          fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+          break;
+        case "trimestre":
+          fechaInicio = new Date(hoy);
+          fechaInicio.setMonth(hoy.getMonth() - 3);
+          break;
+        case "año":
+          fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+          break;
+        default:
+          fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      }
+
+      const transaccionesFiltradas = transacciones.filter((transaccion) => {
+        const fechaTransaccion = new Date(transaccion.fecha_transaccion);
+        return fechaTransaccion >= fechaInicio && fechaTransaccion <= hoy;
+      });
+
+      return transaccionesFiltradas;
     }
 
     actualizarInterfaz() {
-      console.log("🎨 Actualizando interfaz...")
+      const stats = this.datosCompletos.estadisticas;
 
-      const stats = this.datosCompletos.estadisticas
+      this.actualizarElemento("ingresos", stats.totalIngresos, "currency");
+      this.actualizarElemento("gastos", stats.totalGastos, "currency");
+      this.actualizarElemento("balance", stats.balance, "currency");
+      this.actualizarElemento("transacciones", stats.transaccionesCount, "number");
 
-      // Actualizar métricas principales
-      this.actualizarElemento("ingresos", stats.totalIngresos, "currency")
-      this.actualizarElemento("gastos", stats.totalGastos, "currency")
-      this.actualizarElemento("balance", stats.balance, "currency")
-      this.actualizarElemento("transacciones", stats.transaccionesCount, "number")
+      const totalIngresosGrafico = document.getElementById("totalIngresosGrafico");
+      const totalGastosGrafico = document.getElementById("totalGastosGrafico");
 
-      // Actualizar totales en gráficas
-      const totalIngresosGrafico = document.getElementById("totalIngresosGrafico")
-      const totalGastosGrafico = document.getElementById("totalGastosGrafico")
-
-      if (totalIngresosGrafico) totalIngresosGrafico.textContent = `$${stats.totalIngresos.toFixed(2)}`
-      if (totalGastosGrafico) totalGastosGrafico.textContent = `$${stats.totalGastos.toFixed(2)}`
-
-      console.log("✅ Interfaz actualizada")
+      if (totalIngresosGrafico) totalIngresosGrafico.textContent = `$${stats.totalIngresos.toFixed(2)}`;
+      if (totalGastosGrafico) totalGastosGrafico.textContent = `$${stats.totalGastos.toFixed(2)}`;
     }
 
     actualizarElemento(key, valor, tipo) {
-      const elemento = this.elementosEncontrados[key]
+      const elemento = this.elementosEncontrados[key];
       if (elemento) {
-        let textoMostrar = ""
+        let textoMostrar = "";
 
         if (tipo === "currency") {
-          textoMostrar = `$${valor.toFixed(2)}`
+          textoMostrar = `$${valor.toFixed(2)}`;
         } else {
-          textoMostrar = valor.toString()
+          textoMostrar = valor.toString();
         }
 
-        elemento.textContent = textoMostrar
+        elemento.textContent = textoMostrar;
 
-        // Agregar clases de color si es apropiado
         if (key === "balance") {
-          elemento.className = elemento.className.replace(/text-(success|danger)/g, "")
-          elemento.classList.add(valor >= 0 ? "text-success" : "text-danger")
+          elemento.className = elemento.className.replace(/text-(success|danger)/g, "");
+          elemento.classList.add(valor >= 0 ? "text-success" : "text-danger");
         }
-
-        console.log(`✅ Actualizado ${key}: ${textoMostrar}`)
       }
     }
 
     inicializarGraficas() {
-      console.log("📈 Inicializando gráficas...")
-
       if (typeof window.Chart === "undefined") {
-        console.log("ℹ️ Chart.js no disponible")
-        return
+        return;
       }
 
-      this.crearGraficaIngresos()
-      this.crearGraficaGastos()
-      this.crearGraficaEvolucion()
+      this.crearGraficaIngresos();
+      this.crearGraficaGastos();
+      this.crearGraficaEvolucion();
     }
 
     actualizarGraficas() {
-      console.log("📈 Actualizando gráficas...")
+      Object.keys(this.graficas).forEach((key) => {
+        if (this.graficas[key] && typeof this.graficas[key].destroy === "function") {
+          try {
+            this.graficas[key].destroy();
+          } catch (error) {}
+          this.graficas[key] = null;
+        }
+      });
 
-      // Destruir gráficas existentes
-      Object.values(this.graficas).forEach((grafica) => {
-        if (grafica) grafica.destroy()
-      })
-
-      // Recrear gráficas
-      this.inicializarGraficas()
+      this.inicializarGraficas();
     }
 
     crearGraficaIngresos() {
-      const canvas = this.elementosEncontrados.graficoIngresos
-      const noDataDiv = document.getElementById("noDataIngresos")
+      const canvas = this.elementosEncontrados.graficoIngresos;
+      const noDataDiv = document.getElementById("noDataIngresos");
 
-      if (!canvas) return
+      if (!canvas) return;
 
-      const datos = this.datosCompletos.estadisticas.ingresosPorCategoria
-      const labels = Object.keys(datos)
-      const values = Object.values(datos)
-
-      if (labels.length === 0) {
-        canvas.style.display = "none"
-        if (noDataDiv) noDataDiv.style.display = "block"
-        return
+      if (this.graficas.ingresos) {
+        try {
+          this.graficas.ingresos.destroy();
+        } catch (error) {}
       }
 
-      canvas.style.display = "block"
-      if (noDataDiv) noDataDiv.style.display = "none"
+      const datos = this.datosCompletos.estadisticas.ingresosPorCategoria;
+      const labels = Object.keys(datos);
+      const values = Object.values(datos);
 
-      const ctx = canvas.getContext("2d")
+      if (labels.length === 0) {
+        canvas.style.display = "none";
+        if (noDataDiv) noDataDiv.style.display = "block";
+        return;
+      }
+
+      canvas.style.display = "block";
+      if (noDataDiv) noDataDiv.style.display = "none";
+
+      const ctx = canvas.getContext("2d");
       this.graficas.ingresos = new window.Chart(ctx, {
         type: "doughnut",
         data: {
@@ -384,40 +368,44 @@
             tooltip: {
               callbacks: {
                 label: (context) => {
-                  const value = context.parsed
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                  const percentage = ((value / total) * 100).toFixed(1)
-                  return `${context.label}: $${value.toFixed(2)} (${percentage}%)`
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
                 },
               },
             },
           },
         },
-      })
-
-      console.log("✅ Gráfica de ingresos creada")
+      });
     }
 
     crearGraficaGastos() {
-      const canvas = this.elementosEncontrados.graficoGastos
-      const noDataDiv = document.getElementById("noDataGastos")
+      const canvas = this.elementosEncontrados.graficoGastos;
+      const noDataDiv = document.getElementById("noDataGastos");
 
-      if (!canvas) return
+      if (!canvas) return;
 
-      const datos = this.datosCompletos.estadisticas.gastosPorCategoria
-      const labels = Object.keys(datos)
-      const values = Object.values(datos)
-
-      if (labels.length === 0) {
-        canvas.style.display = "none"
-        if (noDataDiv) noDataDiv.style.display = "block"
-        return
+      if (this.graficas.gastos) {
+        try {
+          this.graficas.gastos.destroy();
+        } catch (error) {}
       }
 
-      canvas.style.display = "block"
-      if (noDataDiv) noDataDiv.style.display = "none"
+      const datos = this.datosCompletos.estadisticas.gastosPorCategoria;
+      const labels = Object.keys(datos);
+      const values = Object.values(datos);
 
-      const ctx = canvas.getContext("2d")
+      if (labels.length === 0) {
+        canvas.style.display = "none";
+        if (noDataDiv) noDataDiv.style.display = "block";
+        return;
+      }
+
+      canvas.style.display = "block";
+      if (noDataDiv) noDataDiv.style.display = "none";
+
+      const ctx = canvas.getContext("2d");
       this.graficas.gastos = new window.Chart(ctx, {
         type: "doughnut",
         data: {
@@ -445,50 +433,54 @@
             tooltip: {
               callbacks: {
                 label: (context) => {
-                  const value = context.parsed
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                  const percentage = ((value / total) * 100).toFixed(1)
-                  return `${context.label}: $${value.toFixed(2)} (${percentage}%)`
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
                 },
               },
             },
           },
         },
-      })
-
-      console.log("✅ Gráfica de gastos creada")
+      });
     }
 
     crearGraficaEvolucion() {
-      const canvas = this.elementosEncontrados.graficoEvolucion
-      const noDataDiv = document.getElementById("noDataEvolucion")
+      const canvas = this.elementosEncontrados.graficoEvolucion;
+      const noDataDiv = document.getElementById("noDataEvolucion");
 
-      if (!canvas) return
+      if (!canvas) return;
 
-      const datos = this.datosCompletos.estadisticas.transaccionesPorMes
-      const meses = Object.keys(datos).sort()
-
-      if (meses.length < 2) {
-        canvas.style.display = "none"
-        if (noDataDiv) noDataDiv.style.display = "block"
-        return
+      if (this.graficas.evolucion) {
+        try {
+          this.graficas.evolucion.destroy();
+        } catch (error) {}
       }
 
-      canvas.style.display = "block"
-      if (noDataDiv) noDataDiv.style.display = "none"
+      const datos = this.datosCompletos.estadisticas.transaccionesPorMes;
+      const meses = Object.keys(datos).sort();
 
-      const ingresos = meses.map((mes) => datos[mes].ingresos)
-      const gastos = meses.map((mes) => datos[mes].gastos)
-      const balance = meses.map((mes) => datos[mes].ingresos - datos[mes].gastos)
+      if (meses.length < 2) {
+        canvas.style.display = "none";
+        if (noDataDiv) noDataDiv.style.display = "block";
+        return;
+      }
 
-      const ctx = canvas.getContext("2d")
+      canvas.style.display = "block";
+      if (noDataDiv) noDataDiv.style.display = "none";
+
+      const ingresos = meses.map((mes) => datos[mes].ingresos);
+      const gastos = meses.map((mes) => datos[mes].gastos);
+      const balance = meses.map((mes) => datos[mes].ingresos - datos[mes].gastos);
+
+      const ctx = canvas.getContext("2d");
       this.graficas.evolucion = new window.Chart(ctx, {
         type: "line",
         data: {
           labels: meses.map((mes) => {
-            const [año, mesNum] = mes.split("-")
-            const fecha = new Date(año, mesNum - 1)
-            return fecha.toLocaleDateString("es-ES", { month: "short", year: "numeric" })
+            const [año, mesNum] = mes.split("-");
+            const fecha = new Date(año, mesNum - 1);
+            return fecha.toLocaleDateString("es-ES", { month: "short", year: "numeric" });
           }),
           datasets: [
             {
@@ -530,23 +522,19 @@
             },
           },
         },
-      })
-
-      console.log("✅ Gráfica de evolución creada")
+      });
     }
 
     cargarUltimasTransacciones() {
-      console.log("📋 Cargando últimas transacciones...")
+      const tabla = document.getElementById("tablaUltimasTransacciones");
+      if (!tabla) return;
 
-      const tabla = document.getElementById("tablaUltimasTransacciones")
-      if (!tabla) return
-
-      const tbody = tabla.querySelector("tbody")
-      if (!tbody) return
+      const tbody = tabla.querySelector("tbody");
+      if (!tbody) return;
 
       const transacciones = this.datosCompletos.transacciones
         .sort((a, b) => new Date(b.fecha_transaccion) - new Date(a.fecha_transaccion))
-        .slice(0, 10) // Últimas 10 transacciones
+        .slice(0, 10);
 
       if (transacciones.length === 0) {
         tbody.innerHTML = `
@@ -555,23 +543,23 @@
               <i class="fas fa-info-circle"></i> No hay transacciones recientes
             </td>
           </tr>
-        `
-        return
+        `;
+        return;
       }
 
-      tbody.innerHTML = ""
+      tbody.innerHTML = "";
 
       transacciones.forEach((transaccion) => {
-        const fecha = new Date(transaccion.fecha_transaccion).toLocaleDateString("es-ES")
-        const descripcion = transaccion.descripcion || "Sin descripción"
-        const categoria = transaccion.categoria_nombre || "Sin categoría"
-        const cuenta = transaccion.cuenta_nombre || "Sin cuenta"
+        const fecha = new Date(transaccion.fecha_transaccion).toLocaleDateString("es-ES");
+        const descripcion = transaccion.descripcion || "Sin descripción";
+        const categoria = transaccion.categoria_nombre || "Sin categoría";
+        const cuenta = transaccion.cuenta_nombre || "Sin cuenta";
 
-        const tipoClass = transaccion.tipo === "ingreso" ? "success" : "danger"
-        const tipoIcon = transaccion.tipo === "ingreso" ? "arrow-up" : "arrow-down"
-        const montoSigno = transaccion.tipo === "ingreso" ? "+" : "-"
+        const tipoClass = transaccion.tipo === "ingreso" ? "success" : "danger";
+        const tipoIcon = transaccion.tipo === "ingreso" ? "arrow-up" : "arrow-down";
+        const montoSigno = transaccion.tipo === "ingreso" ? "+" : "-";
 
-        const fila = document.createElement("tr")
+        const fila = document.createElement("tr");
         fila.innerHTML = `
           <td><small>${fecha}</small></td>
           <td>${descripcion}</td>
@@ -587,67 +575,53 @@
               ${montoSigno}$${Number.parseFloat(transaccion.monto).toFixed(2)}
             </span>
           </td>
-        `
-        tbody.appendChild(fila)
-      })
-
-      console.log("✅ Últimas transacciones cargadas")
+        `;
+        tbody.appendChild(fila);
+      });
     }
 
     async actualizarDashboard() {
-      console.log("🔄 Actualizando dashboard...")
-
       try {
-        await this.cargarDatosCompletos()
-        this.calcularEstadisticas()
-        this.actualizarInterfaz()
-        this.actualizarGraficas()
-        this.cargarUltimasTransacciones()
-        console.log("✅ Dashboard actualizado")
-      } catch (error) {
-        console.error("❌ Error actualizando:", error)
-      }
+        await this.cargarDatosCompletos();
+        this.calcularEstadisticas();
+        this.actualizarInterfaz();
+        this.actualizarGraficas();
+        this.cargarUltimasTransacciones();
+      } catch (error) {}
+    }
+
+    async actualizarDashboardConPeriodo(periodo) {
+      this.periodoActual = periodo;
+      await this.actualizarDashboard();
     }
   }
 
-  // Instancia global
-  let dashboardInstance = null
+  let dashboardInstance = null;
 
-  // Función de inicialización
   function inicializarDashboard() {
-    console.log("🚀 Inicializando dashboard mejorado...")
-    dashboardInstance = new DashboardMejorado()
-    dashboardInstance.inicializar()
+    dashboardInstance = new DashboardMejorado();
+    dashboardInstance.inicializar();
   }
 
-  // Función global de actualización
   window.actualizarDashboard = () => {
     if (dashboardInstance) {
-      dashboardInstance.actualizarDashboard()
+      dashboardInstance.actualizarDashboard();
     } else {
-      inicializarDashboard()
+      inicializarDashboard();
     }
-  }
+  };
 
-  // Inicializar
+  window.actualizarDashboardConPeriodo = (periodo) => {
+    if (dashboardInstance) {
+      dashboardInstance.actualizarDashboardConPeriodo(periodo);
+    } else {
+      inicializarDashboard();
+    }
+  };
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inicializarDashboard)
+    document.addEventListener("DOMContentLoaded", inicializarDashboard);
   } else {
-    setTimeout(inicializarDashboard, 100)
+    setTimeout(inicializarDashboard, 100);
   }
-
-  // Debug global mejorado
-  window.DashboardDebug = {
-    instancia: () => dashboardInstance,
-    elementos: () => dashboardInstance?.elementosEncontrados || {},
-    datos: () => dashboardInstance?.datosCompletos || {},
-    actualizar: () => window.actualizarDashboard(),
-    mostrarDatos: () => {
-      console.table(dashboardInstance?.datosCompletos.estadisticas || {})
-      console.log("📊 Datos completos:", dashboardInstance?.datosCompletos || {})
-    },
-  }
-
-  console.log("💡 Dashboard mejorado cargado")
-  console.log("💡 Debug: window.DashboardDebug")
-})()
+})();

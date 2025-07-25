@@ -88,8 +88,6 @@ class Categoria {
               url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json",
             },
           })
-        } else {
-          console.log("error")
         }
       })
   }
@@ -216,7 +214,6 @@ class Categoria {
 
   // Mejorar la función cargarSelectCategorias para mejor depuración
   cargarSelectCategorias() {
-    console.log("🔄 Cargando todas las categorías")
 
     const objData = new FormData()
     objData.append("mostrarCategoria", "ok")
@@ -227,7 +224,6 @@ class Categoria {
     })
       .then((response) => response.json())
       .catch((error) => {
-        console.error("❌ Error al cargar categorías:", error)
       })
       .then((response) => {
         if (response && response["codigo"] == "200") {
@@ -237,8 +233,6 @@ class Categoria {
           if (selectCategoria) {
             selectCategoria.innerHTML = '<option value="">Seleccione una categoría...</option>'
 
-            console.log(`✅ Cargando ${response["listaCategoria"].length} categorías en el select`)
-
             response["listaCategoria"].forEach((element) => {
               const option = document.createElement("option")
               option.value = element.idcategoria
@@ -246,8 +240,6 @@ class Categoria {
               option.setAttribute("data-tipo", element.tipo)
               selectCategoria.appendChild(option)
             })
-          } else {
-            console.warn("⚠️ No se encontró el elemento select de categorías")
           }
 
           if (selectFiltroCategoria) {
@@ -259,15 +251,12 @@ class Categoria {
               selectFiltroCategoria.appendChild(option)
             })
           }
-        } else {
-          console.error("❌ Error en la respuesta del servidor:", response)
-        }
+        } 
       })
   }
 
   // Mejorar la función cargarSelectCategoriasPorTipo para asegurar que funcione correctamente
   cargarSelectCategoriasPorTipo(tipo) {
-    console.log("🔄 Cargando categorías por tipo:", tipo)
 
     const objData = new FormData()
     objData.append("mostrarCategoria", "ok")
@@ -278,7 +267,6 @@ class Categoria {
     })
       .then((response) => response.json())
       .catch((error) => {
-        console.error("❌ Error al cargar categorías por tipo:", error)
       })
       .then((response) => {
         if (response && response["codigo"] == "200") {
@@ -311,24 +299,11 @@ class Categoria {
               option.disabled = true
               selectCategoria.appendChild(option)
 
-              console.warn(`⚠️ No se encontraron categorías de tipo "${tipo}"`)
             }
-          } else {
-            console.error("❌ No se encontró el elemento select de categorías")
-          }
-        } else {
-          console.error("❌ Error en la respuesta del servidor:", response)
+          } 
         }
       })
   }
 }
 
-// Exponer la clase globalmente para que otros módulos puedan usarla
 window.Categoria = Categoria
-
-// Verificar que se expuso correctamente
-if (typeof window.Categoria !== "undefined") {
-  console.log("✅ Clase Categoria expuesta globalmente")
-} else {
-  console.error("❌ Error al exponer la clase Categoria")
-}

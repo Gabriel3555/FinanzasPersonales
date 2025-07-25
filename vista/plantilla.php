@@ -175,6 +175,9 @@ session_start();
                             <a class="nav-link" href="?ruta=reportes">Reportes</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="?ruta=presupuestos">Presupuestos</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="vista/modulos/logout.php">Cerrar Sesión</a>
                         </li>
                     </ul>
@@ -192,7 +195,8 @@ session_start();
                             $_GET["ruta"] == "cuentas" ||
                             $_GET["ruta"] == "categorias" ||
                             $_GET["ruta"] == "reportes" ||
-                            $_GET["ruta"] == "usuarios"
+                            $_GET["ruta"] == "usuarios" ||
+                            $_GET["ruta"] == "presupuestos"
                         ) {
                             include_once "vista/modulos/" . $_GET["ruta"] . ".php";
                         } else {
@@ -237,6 +241,7 @@ session_start();
     <script src="vista/js/cl_cuenta.js"></script>
     <script src="vista/js/cl_categoria.js"></script>
     <script src="vista/js/cl_transaccion.js"></script>
+    <script src="vista/js/cl_presupuesto.js"></script>
     
     <!-- Luego cargar los scripts que usan las clases -->
     <script src="vista/js/usuario.js"></script>
@@ -245,6 +250,7 @@ session_start();
     <script src="vista/js/transaccion.js"></script>
     <script src="vista/js/dashboard.js"></script>
     <script src="vista/js/reportes.js"></script>
+    <script src="vista/js/presupuesto.js"></script>
 <?php else: ?>
     <script src="vista/js/login.js"></script>
 <?php endif; ?>
