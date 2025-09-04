@@ -12,12 +12,12 @@ Permite administrar cuentas, categorías, presupuestos, transacciones, usuarios 
 
 ## 📂 Estructura del proyecto  
 
-gabriel3555-finanzaspersonales/
-├── db.sql
-├── index.php
-├── controlador/
-├── modelo/
-└── vista/
+finanzaspersonales
+├─ db.sql
+├─ index.php
+├─ controlador/
+├─ modelo/
+└─ vista/
 
 ## 🛠️ Tecnologías utilizadas  
 - PHP  
