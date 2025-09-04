@@ -15,13 +15,13 @@ Permite administrar cuentas, categorías, presupuestos, transacciones, usuarios 
 finanzaspersonales
 
 ├─ db.sql
-├
+
 ├─ index.php
-├
+
 ├─ controlador/
-├
+
 ├─ modelo/
-├
+
 └─ vista/
 
 ## 🛠️ Tecnologías utilizadas  
