@@ -1,4 +1,4 @@
-# gabriel3555-finanzaspersonales  
+# Finanzas Personales  
 
 Aplicación web en **PHP** bajo el patrón **MVC** para la gestión de finanzas personales.  
 Permite administrar cuentas, categorías, presupuestos, transacciones, usuarios y generar reportes.  
